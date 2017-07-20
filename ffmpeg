@@ -1,0 +1,32 @@
+#!/bin/bash
+
+_ffmpeg()
+{
+    local cur=${COMP_WORDS[$COMP_CWORD]}
+    local prev=${COMP_WORDS[$COMP_CWORD-1]}
+
+    if [ -n "$prev" ] && [ "${prev:0:1}" = "-" ]; then
+        case "$prev" in
+        -acodec|-c:a)
+            COMPREPLY=( $(compgen -W "$(ffmpeg -encoders 2>/dev/null | sed -n '/--/,$p' | tail -n +2 | grep "^ A" | awk '{print $2}')" -- "$cur") ) ;;
+        -f)
+            COMPREPLY=( $(compgen -W "$(ffmpeg -formats 2>/dev/null | sed -n '/--/,$p' | tail -n +2 | awk '{print $2}')" -- "$cur") ) ;;
+        -h|-\?|-help|--help)
+            COMPREPLY=( $(compgen -W "long full decoder= encoder= demuxer= muxer= filter=" -- "$cur") ) ;;
+        -hwaccel)
+            COMPREPLY=( $(compgen -W "none auto $(ffmpeg -hwaccels 2>/dev/null | tail -n +2)" -- "$cur") ) ;;
+        -init_hw_device)
+            COMPREPLY=( $(compgen -W "cuda dxva2 vaapi vdpau qsv" -- "$cur") ) ;;
+        -loglevel)
+            COMPREPLY=( $(compgen -W "quiet panic fatal error warning info verbose debug trace" -- "$cur") ) ;;
+        -pix_fmt)
+            COMPREPLY=( $(compgen -W "$(ffmpeg -pix_fmts 2>/dev/null | sed -n '/--/,$p' | tail -n +2 | awk '{print $2}')" -- "$cur") ) ;;
+        -vcodec|-c:v)
+            COMPREPLY=( $(compgen -W "$(ffmpeg -encoders 2>/dev/null | sed -n '/--/,$p' | tail -n +2 | grep "^ V" | awk '{print $2}')" -- "$cur") ) ;;
+        esac
+    elif [ -n "$cur" ] && [ "${cur:0:1}" = "-" ]; then
+        COMPREPLY=( $(compgen -W "$(ffmpeg -h 2>/dev/null | grep "^-" | awk '{print $1}')" -- "$cur") )
+    fi
+}
+
+complete -o default -F _ffmpeg ffmpeg
